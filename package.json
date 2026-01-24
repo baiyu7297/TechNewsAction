@@ -11,7 +11,8 @@
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
     "node-cron": "^3.0.3",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "nodemailer": "^6.9.0"
   },
   "devDependencies": {},
   "keywords": ["tech-news", "wechat", "automation", "github-actions"],

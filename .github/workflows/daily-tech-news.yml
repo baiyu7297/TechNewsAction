@@ -23,11 +23,22 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Fetch tech news and push to WeChat
+    - name: Fetch tech news and push
       env:
+        # 企业微信配置
         WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
         WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
         WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+        # Server酱配置
+        SERVER_CHAN_KEY: ${{ secrets.SERVER_CHAN_KEY }}
+        # 钉钉配置
+        DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+        # 邮件配置
+        SMTP_HOST: ${{ secrets.SMTP_HOST }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        TO_EMAIL: ${{ secrets.TO_EMAIL }}
       run: node src/index.js
       
     - name: Upload logs

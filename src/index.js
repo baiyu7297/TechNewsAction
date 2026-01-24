@@ -1,5 +1,8 @@
 const TechNewsFetcher = require('./newsFetcher');
 const WeChatNotifier = require('./weChatNotifier');
+const ServerChanNotifier = require('./serverChanNotifier');
+const EmailNotifier = require('./emailNotifier');
+const DingTalkNotifier = require('./dingTalkNotifier');
 const fs = require('fs');
 const path = require('path');
 
@@ -39,20 +42,43 @@ async function main() {
     const message = newsFetcher.formatNewsMessage(news);
     log(`📝 已格式化消息，包含 ${news.length} 条新闻`);
     
-    // 初始化微信推送器
-    const weChatNotifier = new WeChatNotifier();
+    // 智能选择推送方式
+    let success = false;
+    let pushMethod = '';
     
-    // 推送消息到微信
-    log('📤 开始推送消息到微信...');
-    const success = await weChatNotifier.send(message, {
-      useMarkdown: false,
-      fallbackToApp: true
-    });
+    // 优先级：Server酱 > 企业微信 > 钉钉 > 邮件
+    if (process.env.SERVER_CHAN_KEY) {
+      const notifier = new ServerChanNotifier();
+      log('📤 使用 Server酱 推送消息...');
+      success = await notifier.send(message);
+      pushMethod = 'Server酱';
+    } else if (process.env.WECHAT_WEBHOOK || process.env.WECHAT_APP_ID) {
+      const notifier = new WeChatNotifier();
+      log('📤 使用企业微信推送消息...');
+      success = await notifier.send(message, {
+        useMarkdown: false,
+        fallbackToApp: true
+      });
+      pushMethod = '企业微信';
+    } else if (process.env.DINGTALK_WEBHOOK) {
+      const notifier = new DingTalkNotifier();
+      log('📤 使用钉钉推送消息...');
+      success = await notifier.send(message);
+      pushMethod = '钉钉';
+    } else if (process.env.SMTP_USER && process.env.TO_EMAIL) {
+      const notifier = new EmailNotifier();
+      log('📤 使用邮件推送消息...');
+      success = await notifier.send(message);
+      pushMethod = '邮件';
+    } else {
+      log('❌ 未配置任何推送方式');
+      throw new Error('请配置至少一种推送方式');
+    }
     
     if (success) {
-      log('✅ 微信推送成功完成');
+      log(`✅ ${pushMethod}推送成功完成`);
     } else {
-      log('❌ 微信推送失败');
+      log(`❌ ${pushMethod}推送失败`);
       process.exit(1);
     }
     
