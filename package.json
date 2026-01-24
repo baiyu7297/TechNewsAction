@@ -1,0 +1,20 @@
+{
+  "name": "tech-news-action",
+  "version": "1.0.0",
+  "description": "Daily tech news fetch and WeChat push automation",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "node-cron": "^3.0.3",
+    "moment": "^2.29.4"
+  },
+  "devDependencies": {},
+  "keywords": ["tech-news", "wechat", "automation", "github-actions"],
+  "author": "",
+  "license": "MIT"
+}

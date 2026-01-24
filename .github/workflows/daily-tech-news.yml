@@ -1,0 +1,39 @@
+name: Daily Tech News Push
+
+on:
+  schedule:
+    # 每天早上8点 (UTC时间 0点 = 北京时间8点)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  fetch-and-push-tech-news:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Fetch tech news and push to WeChat
+      env:
+        WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}
+        WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+        WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+      run: node src/index.js
+      
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: execution-logs
+        path: logs/
+        retention-days: 7
