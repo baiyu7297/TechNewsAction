@@ -7,6 +7,9 @@ class EmailNotifier {
     this.smtpUser = process.env.SMTP_USER;
     this.smtpPass = process.env.SMTP_PASS;
     this.toEmail = process.env.TO_EMAIL;
+    this.gmailClientId = process.env.GMAIL_CLIENT_ID;
+    this.gmailClientSecret = process.env.GMAIL_CLIENT_SECRET;
+    this.gmailRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
   }
 
   async send(message) {
