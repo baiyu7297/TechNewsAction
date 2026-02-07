@@ -25,12 +25,16 @@ async function healthCheck() {
     allPassed = false;
   }
   
+  // nodemailer 是可选的
   try {
-    require('nodemailer');
-    console.log('✓ nodemailer 已安装');
+    const nodemailer = require('nodemailer');
+    if (nodemailer && typeof nodemailer.createTransport === 'function') {
+      console.log('✓ nodemailer 已安装（可选）');
+    } else {
+      console.log('⚠️  nodemailer 已安装但不可用（将使用 SendGrid）');
+    }
   } catch (e) {
-    console.error('✗ nodemailer 未安装');
-    allPassed = false;
+    console.log('⚠️  nodemailer 未安装（将使用 SendGrid API）');
   }
   
   // 检查 axios 和网络连接
@@ -58,7 +62,8 @@ async function healthCheck() {
     'SERVER_CHAN_KEY',
     'DINGTALK_WEBHOOK',
     'SMTP_USER',
-    'TO_EMAIL'
+    'TO_EMAIL',
+    'SENDGRID_API_KEY'
   ];
   
   let hasAnyConfig = false;

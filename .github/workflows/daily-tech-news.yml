@@ -20,9 +20,7 @@ jobs:
         node-version: '20'
         
     - name: Install dependencies
-      run: |
-        npm cache clean --force
-        npm install
+      run: npm install --legacy-peer-deps
       
     - name: Health check
       run: npm run health
@@ -37,13 +35,12 @@ jobs:
         SERVER_CHAN_KEY: ${{ secrets.SERVER_CHAN_KEY }}
         # 钉钉配置
         DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
-        # 邮件配置（Gmail）
+        # 邮件配置（Gmail + nodemailer）
         SMTP_USER: ${{ secrets.SMTP_USER }}
         SMTP_PASS: ${{ secrets.SMTP_PASS }}
         TO_EMAIL: ${{ secrets.TO_EMAIL }}
-        # 备用邮件配置（Mailgun）
-        MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-        MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+        # 备用邮件配置（SendGrid API）
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       run: node src/index.js
       
     - name: Upload logs

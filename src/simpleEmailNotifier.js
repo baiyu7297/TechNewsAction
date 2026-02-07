@@ -1,4 +1,4 @@
-// 简化版邮件通知器 - 使用原生 HTTPS 模块
+// 简化版邮件通知器 - 支持 QQ/163/Gmail 等多种邮箱
 const https = require('https');
 
 class SimpleEmailNotifier {
@@ -8,87 +8,184 @@ class SimpleEmailNotifier {
     this.toEmail = process.env.TO_EMAIL;
   }
 
+  // 自动检测邮箱类型并返回 SMTP 配置
+  getSmtpConfig() {
+    const email = this.smtpUser.toLowerCase();
+    
+    if (email.includes('@qq.com')) {
+      return {
+        host: 'smtp.qq.com',
+        port: 465,
+        secure: true,
+        service: 'QQ邮箱'
+      };
+    } else if (email.includes('@163.com')) {
+      return {
+        host: 'smtp.163.com',
+        port: 465,
+        secure: true,
+        service: '163邮箱'
+      };
+    } else if (email.includes('@126.com')) {
+      return {
+        host: 'smtp.126.com',
+        port: 465,
+        secure: true,
+        service: '126邮箱'
+      };
+    } else if (email.includes('@gmail.com')) {
+      return {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        service: 'Gmail'
+      };
+    } else if (email.includes('@outlook.com') || email.includes('@hotmail.com')) {
+      return {
+        host: 'smtp-mail.outlook.com',
+        port: 587,
+        secure: false,
+        service: 'Outlook'
+      };
+    } else {
+      // 默认配置
+      return {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        service: '通用SMTP'
+      };
+    }
+  }
+
   async send(message) {
     if (!this.smtpUser || !this.smtpPass || !this.toEmail) {
-      throw new Error('未配置邮件推送参数');
+      throw new Error('未配置邮件推送参数: SMTP_USER, SMTP_PASS, TO_EMAIL');
     }
 
-    // 尝试使用 nodemailer
+    console.log('📧 准备发送邮件...');
+    console.log(`   发件人: ${this.smtpUser}`);
+    console.log(`   收件人: ${this.toEmail}`);
+
+    const smtpConfig = this.getSmtpConfig();
+    console.log(`   邮箱类型: ${smtpConfig.service}`);
+    console.log(`   SMTP服务器: ${smtpConfig.host}:${smtpConfig.port}`);
+
+    // 优先尝试使用 nodemailer（如果可用）
     try {
       const nodemailer = require('nodemailer');
-      
       if (nodemailer && typeof nodemailer.createTransport === 'function') {
-        return await this.sendWithNodemailer(message, nodemailer);
-      } else {
-        console.warn('⚠️  nodemailer 不可用，使用备用方案');
-        return await this.sendWithMailgun(message);
+        console.log('   使用 nodemailer 发送');
+        return await this.sendWithNodemailer(message, nodemailer, smtpConfig);
       }
+    } catch (e) {
+      console.log('   nodemailer 不可用');
+    }
+
+    // 备用方案：使用 SendGrid API（如果配置了）
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    if (sendgridKey) {
+      console.log('   使用 SendGrid API 备用方案');
+      return await this.sendWithSendGrid(message);
+    }
+
+    console.error('❌ 无可用的邮件发送方式');
+    console.log('\n解决方案：');
+    console.log('1. 确保 nodemailer 已正确安装');
+    console.log('2. 或配置 SENDGRID_API_KEY 作为备用方案');
+    return false;
+  }
+
+  async sendWithNodemailer(message, nodemailer, smtpConfig) {
+    try {
+      const transportConfig = {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        auth: {
+          user: this.smtpUser,
+          pass: this.smtpPass
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      };
+
+      const transporter = nodemailer.createTransport(transportConfig);
+
+      console.log('   验证 SMTP 连接...');
+      await transporter.verify();
+      console.log('   ✅ SMTP 连接验证成功');
+
+      const result = await transporter.sendMail({
+        from: `"科技资讯推送" <${this.smtpUser}>`,
+        to: this.toEmail,
+        subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
+        html: message,
+        text: message.replace(/<[^>]*>/g, '')
+      });
+
+      console.log('✅ 邮件发送成功!');
+      console.log(`   Message ID: ${result.messageId}`);
+      return true;
     } catch (error) {
-      console.error('❌ nodemailer 加载失败:', error.message);
-      console.log('尝试使用备用邮件发送方案...');
-      return await this.sendWithMailgun(message);
+      console.error('❌ nodemailer 发送失败:', error.message);
+      if (error.code) {
+        console.error(`   错误代码: ${error.code}`);
+      }
+      
+      // 如果配置了 SendGrid，尝试备用方案
+      const sendgridKey = process.env.SENDGRID_API_KEY;
+      if (sendgridKey) {
+        console.log('   尝试使用 SendGrid API 备用方案...');
+        return await this.sendWithSendGrid(message);
+      }
+      
+      return false;
     }
   }
 
-  async sendWithNodemailer(message, nodemailer) {
-    console.log('📧 使用 nodemailer 发送邮件...');
+  async sendWithSendGrid(message) {
+    const sendgridKey = process.env.SENDGRID_API_KEY;
     
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: this.smtpUser,
-        pass: this.smtpPass
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-
-    await transporter.verify();
-    console.log('✅ SMTP 连接验证成功');
-
-    const result = await transporter.sendMail({
-      from: `"科技资讯" <${this.smtpUser}>`,
-      to: this.toEmail,
-      subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
-      html: message
-    });
-
-    console.log('✅ 邮件发送成功:', result.messageId);
-    return true;
-  }
-
-  async sendWithMailgun(message) {
-    console.log('📧 使用 Mailgun API 发送邮件...');
-    
-    // 如果配置了 Mailgun
-    const mailgunKey = process.env.MAILGUN_API_KEY;
-    const mailgunDomain = process.env.MAILGUN_DOMAIN;
-    
-    if (!mailgunKey || !mailgunDomain) {
-      console.error('❌ 未配置 Mailgun，无法使用备用方案');
-      console.log('提示：请在 GitHub Secrets 中添加 MAILGUN_API_KEY 和 MAILGUN_DOMAIN');
+    if (!sendgridKey) {
+      console.error('❌ 未配置 SENDGRID_API_KEY');
+      console.log('\n解决方案：');
+      console.log('1. 访问 https://sendgrid.com/ 注册账号（免费额度：每天100封）');
+      console.log('2. 创建 API Key');
+      console.log('3. 在 GitHub Secrets 中添加 SENDGRID_API_KEY');
+      console.log('4. 或者确保 nodemailer 正确安装');
       return false;
     }
 
-    const formData = new URLSearchParams({
-      from: `科技资讯 <mailgun@${mailgunDomain}>`,
-      to: this.toEmail,
-      subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
-      html: message
-    });
+    console.log('   使用 SendGrid API 发送邮件...');
 
-    const auth = Buffer.from(`api:${mailgunKey}`).toString('base64');
+    const emailData = {
+      personalizations: [{
+        to: [{ email: this.toEmail }],
+        subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`
+      }],
+      from: { 
+        email: this.smtpUser,
+        name: '科技资讯推送'
+      },
+      content: [{
+        type: 'text/html',
+        value: message
+      }]
+    };
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      const postData = JSON.stringify(emailData);
+      
       const options = {
-        hostname: 'api.mailgun.net',
-        path: `/v3/${mailgunDomain}/messages`,
+        hostname: 'api.sendgrid.com',
+        path: '/v3/mail/send',
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': formData.toString().length
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
         }
       };
 
@@ -96,22 +193,22 @@ class SimpleEmailNotifier {
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
-          if (res.statusCode === 200) {
-            console.log('✅ Mailgun 邮件发送成功');
+          if (res.statusCode === 202) {
+            console.log('✅ SendGrid 邮件发送成功');
             resolve(true);
           } else {
-            console.error('❌ Mailgun 发送失败:', data);
+            console.error(`❌ SendGrid 发送失败 (${res.statusCode}):`, data);
             resolve(false);
           }
         });
       });
 
       req.on('error', (error) => {
-        console.error('❌ Mailgun 请求失败:', error.message);
+        console.error('❌ SendGrid 请求失败:', error.message);
         resolve(false);
       });
 
-      req.write(formData.toString());
+      req.write(postData);
       req.end();
     });
   }

@@ -46,40 +46,30 @@ WECHAT_WEBHOOK=你的企业微信机器人Webhook URL
 DINGTALK_WEBHOOK=你的钉钉机器人Webhook URL
 ```
 
-#### 方式四：邮件推送（Gmail）
+#### 方式四：邮件推送（推荐 QQ 邮箱）
 
-**重要：Gmail 需要使用应用专用密码，不能使用普通密码！**
+**方案 A：QQ 邮箱（最简单，5分钟配置）**
 
-1. 登录你的 Gmail 账户
-2. 访问 [Google 账户安全设置](https://myaccount.google.com/security)
-3. 启用"两步验证"（如果还没启用）
-4. 在"两步验证"页面，找到"应用专用密码"
-5. 生成一个新的应用专用密码（选择"邮件"和"其他设备"）
-6. 复制生成的 16 位密码
-
-然后在 GitHub Secrets 中添加：
+1. 登录 QQ 邮箱：https://mail.qq.com/
+2. 设置 → 账户 → 开启 "IMAP/SMTP服务"
+3. 发送短信验证，获取 16 位授权码
+4. 在 GitHub Secrets 中添加：
 
 ```
-SMTP_USER=你的Gmail地址（例如：yourname@gmail.com）
-SMTP_PASS=刚才生成的16位应用专用密码（不是你的Gmail密码！）
-TO_EMAIL=接收邮件的地址（可以是同一个Gmail地址）
+SMTP_USER=你的QQ邮箱（例如：123456789@qq.com）
+SMTP_PASS=16位授权码（不是QQ密码！）
+TO_EMAIL=接收邮件的邮箱地址
 ```
 
-**可选：Mailgun 备用方案**
+详细步骤请查看：[QQ_EMAIL_SETUP.md](QQ_EMAIL_SETUP.md)
 
-如果 Gmail 发送失败，系统会自动尝试使用 Mailgun（如果已配置）：
+**方案 B：163/126 邮箱（同样简单）**
 
-```
-MAILGUN_API_KEY=你的Mailgun API密钥
-MAILGUN_DOMAIN=你的Mailgun域名
-```
+配置方法与 QQ 邮箱相同，代码会自动识别邮箱类型。
 
-注册 Mailgun: https://www.mailgun.com/ (免费额度：每月5000封邮件)
+**方案 C：其他邮箱服务**
 
-**常见问题：**
-- ❌ 使用普通密码会失败
-- ✅ 必须使用应用专用密码
-- ✅ 必须启用两步验证才能生成应用专用密码
+如果无法使用国内邮箱，查看：[ALTERNATIVE_EMAIL_SOLUTIONS.md](ALTERNATIVE_EMAIL_SOLUTIONS.md)
 
 ### 3. 启用 GitHub Actions
 
@@ -132,10 +122,21 @@ schedule:
 当前支持以下国际科技新闻源：
 
 - **Hacker News** - 最热门的科技新闻和讨论
-- **GitHub Trending** - 当日最热门的开源项目
+- **GitHub Trending** - 当日最热门的开源项目  
 - **Dev.to** - 开发者社区的热门文章
 
 这些新闻源都提供稳定的 API 或易于抓取的页面结构，确保可靠性。
+
+### 邮箱配置
+
+**支持的邮箱类型：**
+- QQ 邮箱（推荐，国内最简单）
+- 163 邮箱
+- 126 邮箱
+- Gmail（需要翻墙）
+- Outlook/Hotmail
+
+代码会自动识别邮箱类型并使用正确的 SMTP 配置。
 
 ### 推送配置
 
@@ -178,11 +179,9 @@ npm install
 ### 本地运行
 
 ```bash
-# 设置环境变量（选择一种推送方式）
-export SERVER_CHAN_KEY="your_sendkey"
-# 或使用 Gmail
-export SMTP_USER="your_email@gmail.com"
-export SMTP_PASS="your_app_password"
+# 设置环境变量（QQ 邮箱示例）
+export SMTP_USER="123456789@qq.com"
+export SMTP_PASS="你的16位授权码"
 export TO_EMAIL="recipient@example.com"
 
 # 运行健康检查
@@ -200,33 +199,25 @@ tail -f logs/tech-news-$(date +%Y-%m-%d).log
 
 ## 故障排除
 
-### 1. Gmail 邮件发送失败
+### 1. QQ 邮箱发送问题
 
-**错误：Invalid login 或 Username and Password not accepted**
+**错误：Invalid login: 535 Login Fail**
+- 原因：使用了 QQ 密码而不是授权码
+- 解决：使用 QQ 邮箱设置中生成的 16 位授权码
 
-原因：使用了普通密码而不是应用专用密码
+**错误：Mail send frequency exceeds limit**
+- 原因：发送频率过高
+- 解决：不要频繁测试，每天运行一次即可
 
-解决方法：
-1. 访问 [Google 账户安全设置](https://myaccount.google.com/security)
-2. 启用"两步验证"
-3. 生成"应用专用密码"
-4. 使用应用专用密码替换 SMTP_PASS
-
-**错误：Connection timeout**
-
-原因：SMTP 端口被防火墙阻止
-
-解决方法：
-- 尝试使用端口 465（需要设置 SMTP_PORT=465）
-- 或使用端口 587（推荐）
+**详细配置步骤：** 查看 [QQ_EMAIL_SETUP.md](QQ_EMAIL_SETUP.md)
 
 ### 2. 未收到邮件
 
 检查清单：
 - ✅ 检查垃圾邮件文件夹
 - ✅ 确认 TO_EMAIL 地址正确
-- ✅ 查看 GitHub Actions 日志中的错误信息
-- ✅ 运行 `npm run test:email` 本地测试
+- ✅ 确认使用的是授权码，不是邮箱密码
+- ✅ 查看 GitHub Actions 日志
 
 ### 3. 获取不到新闻
 
