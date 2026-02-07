@@ -1,13 +1,11 @@
 // 测试邮件发送功能
-const EmailNotifier = require('./emailNotifier');
+const SimpleEmailNotifier = require('./simpleEmailNotifier');
 
 async function testEmail() {
   console.log('📧 开始测试邮件发送...\n');
   
   // 检查环境变量
   console.log('检查环境变量配置:');
-  console.log(`SMTP_HOST: ${process.env.SMTP_HOST || '❌ 未配置'}`);
-  console.log(`SMTP_PORT: ${process.env.SMTP_PORT || '❌ 未配置'}`);
   console.log(`SMTP_USER: ${process.env.SMTP_USER || '❌ 未配置'}`);
   console.log(`SMTP_PASS: ${process.env.SMTP_PASS ? '✅ 已配置' : '❌ 未配置'}`);
   console.log(`TO_EMAIL: ${process.env.TO_EMAIL || '❌ 未配置'}\n`);
@@ -15,8 +13,6 @@ async function testEmail() {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.TO_EMAIL) {
     console.error('❌ 缺少必要的环境变量配置');
     console.log('\n请设置以下环境变量:');
-    console.log('export SMTP_HOST=smtp.gmail.com');
-    console.log('export SMTP_PORT=587');
     console.log('export SMTP_USER=your_email@gmail.com');
     console.log('export SMTP_PASS=your_app_password');
     console.log('export TO_EMAIL=recipient@example.com');
@@ -24,7 +20,7 @@ async function testEmail() {
   }
   
   try {
-    const notifier = new EmailNotifier();
+    const notifier = new SimpleEmailNotifier();
     
     const testMessage = `
       <h1>📧 邮件测试</h1>

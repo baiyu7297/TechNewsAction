@@ -2,14 +2,11 @@ const nodemailer = require('nodemailer');
 
 class EmailNotifier {
   constructor() {
-    this.smtpHost = process.env.SMTP_HOST;
+    this.smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     this.smtpPort = process.env.SMTP_PORT || 587;
     this.smtpUser = process.env.SMTP_USER;
     this.smtpPass = process.env.SMTP_PASS;
     this.toEmail = process.env.TO_EMAIL;
-    this.gmailClientId = process.env.GMAIL_CLIENT_ID;
-    this.gmailClientSecret = process.env.GMAIL_CLIENT_SECRET;
-    this.gmailRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
   }
 
   async send(message) {
@@ -27,6 +24,13 @@ class EmailNotifier {
       console.log(`   收件人: ${this.toEmail}`);
       console.log(`   SMTP服务器: ${this.smtpHost}:${this.smtpPort}`);
       
+      // 检查 nodemailer 是否正确加载
+      if (!nodemailer || typeof nodemailer.createTransport !== 'function') {
+        console.error('❌ nodemailer 模块加载失败');
+        console.error('   nodemailer:', nodemailer);
+        throw new Error('nodemailer 模块未正确加载');
+      }
+      
       const transportConfig = {
         host: this.smtpHost,
         port: parseInt(this.smtpPort),
@@ -34,6 +38,9 @@ class EmailNotifier {
         auth: {
           user: this.smtpUser,
           pass: this.smtpPass
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       };
       
@@ -43,7 +50,8 @@ class EmailNotifier {
         console.log('   使用 Gmail 服务');
       }
       
-      const transporter = nodemailer.createTransporter(transportConfig);
+      console.log('   创建传输器...');
+      const transporter = nodemailer.createTransport(transportConfig);
 
       // 验证连接
       console.log('   验证 SMTP 连接...');
@@ -72,7 +80,9 @@ class EmailNotifier {
       if (error.command) {
         console.error(`   失败命令: ${error.command}`);
       }
-      console.error('   完整错误:', error);
+      if (error.stack) {
+        console.error('   错误堆栈:', error.stack);
+      }
       return false;
     }
   }

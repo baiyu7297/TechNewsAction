@@ -16,7 +16,7 @@
     "axios": "^1.7.0",
     "cheerio": "^1.0.0-rc.12",
     "moment": "^2.30.0",
-    "nodemailer": "^6.9.0"
+    "nodemailer": "6.9.16"
   },
   "devDependencies": {},
   "keywords": ["tech-news", "wechat", "automation", "github-actions"],

@@ -29,6 +29,5 @@ Thumbs.db
 tmp/
 temp/
 
-# 锁文件（GitHub Actions 不需要）
-package-lock.json
+# yarn 锁文件
 yarn.lock

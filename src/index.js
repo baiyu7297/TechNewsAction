@@ -1,7 +1,7 @@
 const TechNewsFetcher = require('./newsFetcher');
 const WeChatNotifier = require('./weChatNotifier');
 const ServerChanNotifier = require('./serverChanNotifier');
-const EmailNotifier = require('./emailNotifier');
+const SimpleEmailNotifier = require('./simpleEmailNotifier');
 const DingTalkNotifier = require('./dingTalkNotifier');
 const fs = require('fs');
 const path = require('path');
@@ -65,7 +65,7 @@ async function main() {
       success = await notifier.send(message);
       pushMethod = '钉钉';
     } else if (process.env.SMTP_USER && process.env.TO_EMAIL) {
-      const notifier = new EmailNotifier();
+      const notifier = new SimpleEmailNotifier();
       log('📤 使用邮件推送消息...');
       success = await notifier.send(message);
       pushMethod = '邮件';

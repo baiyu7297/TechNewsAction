@@ -60,12 +60,21 @@ DINGTALK_WEBHOOK=你的钉钉机器人Webhook URL
 然后在 GitHub Secrets 中添加：
 
 ```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
 SMTP_USER=你的Gmail地址（例如：yourname@gmail.com）
 SMTP_PASS=刚才生成的16位应用专用密码（不是你的Gmail密码！）
 TO_EMAIL=接收邮件的地址（可以是同一个Gmail地址）
 ```
+
+**可选：Mailgun 备用方案**
+
+如果 Gmail 发送失败，系统会自动尝试使用 Mailgun（如果已配置）：
+
+```
+MAILGUN_API_KEY=你的Mailgun API密钥
+MAILGUN_DOMAIN=你的Mailgun域名
+```
+
+注册 Mailgun: https://www.mailgun.com/ (免费额度：每月5000封邮件)
 
 **常见问题：**
 - ❌ 使用普通密码会失败
@@ -171,8 +180,10 @@ npm install
 ```bash
 # 设置环境变量（选择一种推送方式）
 export SERVER_CHAN_KEY="your_sendkey"
-# 或
-export WECHAT_WEBHOOK="your_webhook_url"
+# 或使用 Gmail
+export SMTP_USER="your_email@gmail.com"
+export SMTP_PASS="your_app_password"
+export TO_EMAIL="recipient@example.com"
 
 # 运行健康检查
 npm run health
