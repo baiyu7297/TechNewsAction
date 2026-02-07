@@ -33,14 +33,13 @@ async function main() {
     // 获取过去24小时的科技资讯
     const news = await newsFetcher.fetchAllNews();
     
-    if (news.length === 0) {
-      log('⚠️ 未获取到任何新闻，任务结束');
-      return;
-    }
-    
-    // 格式化消息
+    // 格式化消息（即使没有新闻也会生成消息）
     const message = newsFetcher.formatNewsMessage(news);
     log(`📝 已格式化消息，包含 ${news.length} 条新闻`);
+    
+    if (news.length === 0) {
+      log('⚠️ 未获取到任何新闻，但仍会发送通知');
+    }
     
     // 智能选择推送方式
     let success = false;

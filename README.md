@@ -46,15 +46,31 @@ WECHAT_WEBHOOK=你的企业微信机器人Webhook URL
 DINGTALK_WEBHOOK=你的钉钉机器人Webhook URL
 ```
 
-#### 方式四：邮件推送
+#### 方式四：邮件推送（Gmail）
+
+**重要：Gmail 需要使用应用专用密码，不能使用普通密码！**
+
+1. 登录你的 Gmail 账户
+2. 访问 [Google 账户安全设置](https://myaccount.google.com/security)
+3. 启用"两步验证"（如果还没启用）
+4. 在"两步验证"页面，找到"应用专用密码"
+5. 生成一个新的应用专用密码（选择"邮件"和"其他设备"）
+6. 复制生成的 16 位密码
+
+然后在 GitHub Secrets 中添加：
 
 ```
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_password
-TO_EMAIL=recipient@example.com
+SMTP_USER=你的Gmail地址（例如：yourname@gmail.com）
+SMTP_PASS=刚才生成的16位应用专用密码（不是你的Gmail密码！）
+TO_EMAIL=接收邮件的地址（可以是同一个Gmail地址）
 ```
+
+**常见问题：**
+- ❌ 使用普通密码会失败
+- ✅ 必须使用应用专用密码
+- ✅ 必须启用两步验证才能生成应用专用密码
 
 ### 3. 启用 GitHub Actions
 
@@ -64,11 +80,30 @@ TO_EMAIL=recipient@example.com
 
 ### 4. 手动测试
 
+#### 在 GitHub Actions 中测试
+
 可以在 Actions 页面手动触发工作流进行测试：
 
 1. 进入 Actions 页面
 2. 选择 "Daily Tech News Push" 工作流
 3. 点击 "Run workflow"
+4. 等待执行完成，检查日志和邮箱
+
+#### 本地测试邮件配置
+
+如果你想在本地测试邮件发送：
+
+```bash
+# 设置环境变量
+export SMTP_HOST=smtp.gmail.com
+export SMTP_PORT=587
+export SMTP_USER=your_email@gmail.com
+export SMTP_PASS=your_app_password
+export TO_EMAIL=recipient@example.com
+
+# 运行邮件测试
+npm run test:email
+```
 
 ## 配置说明
 
@@ -85,13 +120,13 @@ schedule:
 
 ### 新闻源配置
 
-当前支持以下新闻源：
+当前支持以下国际科技新闻源：
 
-- 36氪 (36kr.com)
-- 虎嗅 (huxiu.com)  
-- IT之家 (ithome.com)
+- **Hacker News** - 最热门的科技新闻和讨论
+- **GitHub Trending** - 当日最热门的开源项目
+- **Dev.to** - 开发者社区的热门文章
 
-可在 `src/newsFetcher.js` 中修改或添加新的新闻源。
+这些新闻源都提供稳定的 API 或易于抓取的页面结构，确保可靠性。
 
 ### 推送配置
 
@@ -154,18 +189,39 @@ tail -f logs/tech-news-$(date +%Y-%m-%d).log
 
 ## 故障排除
 
-### 1. 推送失败
+### 1. Gmail 邮件发送失败
 
-- 检查对应推送方式的配置是否正确
-- 确认 Webhook URL 或 API Key 是否有效
-- 查看日志文件了解具体错误信息
+**错误：Invalid login 或 Username and Password not accepted**
 
-### 2. Node.js 版本错误
+原因：使用了普通密码而不是应用专用密码
 
-确保使用 Node.js 20 或更高版本：
-```bash
-node --version  # 应该显示 v20.x.x 或更高
-```
+解决方法：
+1. 访问 [Google 账户安全设置](https://myaccount.google.com/security)
+2. 启用"两步验证"
+3. 生成"应用专用密码"
+4. 使用应用专用密码替换 SMTP_PASS
+
+**错误：Connection timeout**
+
+原因：SMTP 端口被防火墙阻止
+
+解决方法：
+- 尝试使用端口 465（需要设置 SMTP_PORT=465）
+- 或使用端口 587（推荐）
+
+### 2. 未收到邮件
+
+检查清单：
+- ✅ 检查垃圾邮件文件夹
+- ✅ 确认 TO_EMAIL 地址正确
+- ✅ 查看 GitHub Actions 日志中的错误信息
+- ✅ 运行 `npm run test:email` 本地测试
+
+### 3. 获取不到新闻
+
+- Hacker News、GitHub Trending、Dev.to 都是国际网站
+- 确保 GitHub Actions 运行环境可以访问这些网站
+- 查看日志了解具体哪个源失败了
 
 ### 2. 新闻获取失败
 

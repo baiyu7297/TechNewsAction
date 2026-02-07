@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node test/test.js",
-    "health": "node src/healthCheck.js"
+    "health": "node src/healthCheck.js",
+    "test:email": "node src/testEmail.js"
   },
   "engines": {
     "node": ">=20.0.0"
