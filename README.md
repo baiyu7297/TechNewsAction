@@ -7,9 +7,14 @@
 - ⏰ **定时执行**: 每天早上8点自动运行
 - 📰 **多源获取**: 支持36氪、虎嗅、IT之家等科技媒体
 - 🕒 **时效过滤**: 只获取过去24小时内的最新资讯
-- 📱 **微信推送**: 支持企业微信机器人和应用推送
+- 📱 **多种推送**: 支持企业微信、Server酱、钉钉、邮件等多种推送方式
 - 📊 **日志记录**: 完整的执行日志和错误追踪
 - 🔄 **容错机制**: 推送失败时自动尝试备用方案
+
+## 环境要求
+
+- Node.js >= 20.0.0
+- GitHub Actions 环境
 
 ## 快速开始
 
@@ -17,22 +22,38 @@
 
 点击右上角的 Fork 按钮将仓库复制到你的 GitHub 账户。
 
-### 2. 配置微信推送
+### 2. 配置推送方式
 
-在 GitHub 仓库的 Settings > Secrets and variables > Actions 中添加以下密钥：
+在 GitHub 仓库的 Settings > Secrets and variables > Actions 中添加以下密钥（至少配置一种）：
 
-#### 方式一：企业微信机器人（推荐）
+#### 方式一：Server酱（推荐，最简单）
+
+```
+SERVER_CHAN_KEY=你的Server酱SendKey
+```
+
+获取方式：访问 [sct.ftqq.com](https://sct.ftqq.com) 注册并获取 SendKey
+
+#### 方式二：企业微信机器人
 
 ```
 WECHAT_WEBHOOK=你的企业微信机器人Webhook URL
 ```
 
-#### 方式二：企业微信应用
+#### 方式三：钉钉机器人
 
 ```
-WECHAT_APP_ID=你的企业微信应用ID
-WECHAT_APP_SECRET=你的企业微信应用Secret
-WECHAT_AGENT_ID=你的企业微信应用ID（可选，默认1000001）
+DINGTALK_WEBHOOK=你的钉钉机器人Webhook URL
+```
+
+#### 方式四：邮件推送
+
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_password
+TO_EMAIL=recipient@example.com
 ```
 
 ### 3. 启用 GitHub Actions
@@ -74,12 +95,14 @@ schedule:
 
 ### 推送配置
 
-支持两种推送方式：
+支持多种推送方式（优先级从高到低）：
 
-1. **企业微信机器人**: 简单快速，适合群聊推送
-2. **企业微信应用**: 功能更丰富，支持指定用户推送
+1. **Server酱**: 最简单，支持微信推送
+2. **企业微信**: 适合企业团队使用
+3. **钉钉**: 适合使用钉钉的团队
+4. **邮件**: 通用方案，支持任何邮箱
 
-系统会优先使用机器人推送，失败时自动尝试应用推送。
+系统会按优先级自动选择已配置的推送方式。
 
 ## 项目结构
 
@@ -90,7 +113,11 @@ TechNewsAction/
 ├── src/
 │   ├── index.js               # 主程序入口
 │   ├── newsFetcher.js         # 新闻获取模块
-│   └── weChatNotifier.js      # 微信推送模块
+│   ├── weChatNotifier.js      # 企业微信推送
+│   ├── serverChanNotifier.js  # Server酱推送
+│   ├── dingTalkNotifier.js    # 钉钉推送
+│   ├── emailNotifier.js       # 邮件推送
+│   └── healthCheck.js         # 健康检查脚本
 ├── logs/                      # 日志文件目录
 ├── package.json               # 项目依赖
 └── README.md                  # 项目说明
@@ -107,8 +134,13 @@ npm install
 ### 本地运行
 
 ```bash
-# 设置环境变量
+# 设置环境变量（选择一种推送方式）
+export SERVER_CHAN_KEY="your_sendkey"
+# 或
 export WECHAT_WEBHOOK="your_webhook_url"
+
+# 运行健康检查
+npm run health
 
 # 运行程序
 npm start
@@ -122,11 +154,18 @@ tail -f logs/tech-news-$(date +%Y-%m-%d).log
 
 ## 故障排除
 
-### 1. 微信推送失败
+### 1. 推送失败
 
-- 检查 Webhook URL 是否正确
-- 确认企业微信机器人是否在群中
-- 验证应用ID和Secret是否有效
+- 检查对应推送方式的配置是否正确
+- 确认 Webhook URL 或 API Key 是否有效
+- 查看日志文件了解具体错误信息
+
+### 2. Node.js 版本错误
+
+确保使用 Node.js 20 或更高版本：
+```bash
+node --version  # 应该显示 v20.x.x 或更高
+```
 
 ### 2. 新闻获取失败
 

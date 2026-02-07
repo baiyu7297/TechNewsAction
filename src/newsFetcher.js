@@ -34,11 +34,13 @@ class TechNewsFetcher {
 
   async fetchNewsFromSource(source) {
     try {
+      console.log(`正在从 ${source.name} 获取新闻...`);
       const response = await axios.get(source.url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         },
-        timeout: 10000
+        timeout: 15000,
+        validateStatus: (status) => status === 200
       });
 
       const $ = cheerio.load(response.data);
@@ -53,7 +55,12 @@ class TechNewsFetcher {
         const timeText = $element.find(source.timeSelector).text().trim();
         
         if (title && link) {
-          const fullLink = link.startsWith('http') ? link : new URL(link, source.url).href;
+          let fullLink = link;
+          try {
+            fullLink = link.startsWith('http') ? link : new URL(link, source.url).href;
+          } catch (e) {
+            fullLink = link.startsWith('/') ? source.url + link : source.url + '/' + link;
+          }
           const time = this.parseTime(timeText);
           
           // 只获取过去24小时的新闻
@@ -70,7 +77,10 @@ class TechNewsFetcher {
 
       return news;
     } catch (error) {
-      console.error(`获取 ${source.name} 新闻失败:`, error.message);
+      console.error(`❌ 获取 ${source.name} 新闻失败:`, error.message);
+      if (error.response) {
+        console.error(`   HTTP状态: ${error.response.status}`);
+      }
       return [];
     }
   }
@@ -99,19 +109,27 @@ class TechNewsFetcher {
   }
 
   async fetchAllNews() {
-    console.log('开始获取科技资讯...');
+    console.log('🔍 开始获取科技资讯...');
     const allNews = [];
     
     for (const source of this.sources) {
-      console.log(`正在获取 ${source.name} 的新闻...`);
-      const news = await this.fetchNewsFromSource(source);
-      allNews.push(...news);
+      try {
+        const news = await this.fetchNewsFromSource(source);
+        if (news.length > 0) {
+          console.log(`✅ ${source.name}: 获取到 ${news.length} 条新闻`);
+          allNews.push(...news);
+        } else {
+          console.log(`⚠️  ${source.name}: 未获取到新闻`);
+        }
+      } catch (error) {
+        console.error(`❌ ${source.name} 处理失败:`, error.message);
+      }
     }
     
     // 按时间排序
     allNews.sort((a, b) => b.time - a.time);
     
-    console.log(`共获取到 ${allNews.length} 条新闻`);
+    console.log(`📊 共获取到 ${allNews.length} 条新闻`);
     return allNews;
   }
 

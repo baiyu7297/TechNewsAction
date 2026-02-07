@@ -17,10 +17,13 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         
     - name: Install dependencies
       run: npm install --prefer-online --no-package-lock
+      
+    - name: Health check
+      run: npm run health
       
     - name: Fetch tech news and push
       env:
