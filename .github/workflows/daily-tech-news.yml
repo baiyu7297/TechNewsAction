@@ -20,7 +20,7 @@ jobs:
         node-version: '18'
         
     - name: Install dependencies
-      run: npm install
+      run: npm install --prefer-online --no-package-lock
       
     - name: Fetch tech news and push
       env:
