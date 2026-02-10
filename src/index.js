@@ -25,20 +25,20 @@ function log(message) {
 
 async function main() {
   try {
-    log('🚀 开始执行科技资讯推送任务');
+    log('🚀 开始执行 AI 技术资讯推送任务');
     
     // 初始化新闻获取器
     const newsFetcher = new TechNewsFetcher();
     
-    // 获取过去24小时的科技资讯
+    // 获取最新的 AI 技术资讯
     const news = await newsFetcher.fetchAllNews();
     
     // 格式化消息（即使没有新闻也会生成消息）
     const message = newsFetcher.formatNewsMessage(news);
-    log(`📝 已格式化消息，包含 ${news.length} 条新闻`);
+    log(`📝 已格式化消息，包含 ${news.length} 条 AI 资讯`);
     
     if (news.length === 0) {
-      log('⚠️ 未获取到任何新闻，但仍会发送通知');
+      log('⚠️ 未获取到任何 AI 资讯，但仍会发送通知');
     }
     
     // 智能选择推送方式

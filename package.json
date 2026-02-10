@@ -1,7 +1,7 @@
 {
-  "name": "tech-news-action",
+  "name": "ai-tech-news-action",
   "version": "1.0.0",
-  "description": "Daily tech news fetch and WeChat push automation",
+  "description": "Daily AI tech news fetch and email push automation",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -19,7 +19,7 @@
     "nodemailer": "^6.9.0"
   },
   "devDependencies": {},
-  "keywords": ["tech-news", "wechat", "automation", "github-actions"],
+  "keywords": ["ai", "artificial-intelligence", "tech-news", "automation", "github-actions", "chinese"],
   "author": "",
   "license": "MIT"
 }

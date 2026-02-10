@@ -1,4 +1,4 @@
-name: Daily Tech News Push
+name: Daily AI Tech News Push
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # 允许手动触发
 
 jobs:
-  fetch-and-push-tech-news:
+  fetch-and-push-ai-news:
     runs-on: ubuntu-latest
     
     steps:
@@ -25,7 +25,7 @@ jobs:
     - name: Health check
       run: npm run health
       
-    - name: Fetch tech news and push
+    - name: Fetch AI news and push
       env:
         # 企业微信配置
         WECHAT_WEBHOOK: ${{ secrets.WECHAT_WEBHOOK }}

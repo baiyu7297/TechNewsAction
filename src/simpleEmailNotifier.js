@@ -118,9 +118,9 @@ class SimpleEmailNotifier {
       console.log('   ✅ SMTP 连接验证成功');
 
       const result = await transporter.sendMail({
-        from: `"科技资讯推送" <${this.smtpUser}>`,
+        from: `"AI技术资讯推送" <${this.smtpUser}>`,
         to: this.toEmail,
-        subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
+        subject: `🤖 AI技术资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
         html: message,
         text: message.replace(/<[^>]*>/g, '')
       });
