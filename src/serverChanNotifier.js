@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { normalizeMessagePayload } = require('./messageUtils');
 
 class ServerChanNotifier {
   constructor() {
@@ -11,10 +12,11 @@ class ServerChanNotifier {
     }
 
     try {
+      const payloadMessage = normalizeMessagePayload(message, 'AI 技术情报');
       const url = `https://sctapi.ftqq.com/${this.sendKey}.send`;
       const payload = {
-        title: '📰 科技资讯',
-        desp: message
+        title: payloadMessage.subject,
+        desp: payloadMessage.markdown
       };
 
       const response = await axios.post(url, payload, {

@@ -41,6 +41,15 @@ jobs:
         TO_EMAIL: ${{ secrets.TO_EMAIL }}
         # 备用邮件配置（SendGrid API）
         SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        # AI 翻译配置
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        TRANSLATE_TO_ZH: ${{ vars.TRANSLATE_TO_ZH }}
+        # 可选筛选参数
+        NEWS_LOOKBACK_HOURS: ${{ vars.NEWS_LOOKBACK_HOURS }}
+        NEWS_FALLBACK_DAYS: ${{ vars.NEWS_FALLBACK_DAYS }}
+        NEWS_MAX_ITEMS: ${{ vars.NEWS_MAX_ITEMS }}
+        NEWS_MIN_ITEMS: ${{ vars.NEWS_MIN_ITEMS }}
       run: node src/index.js
       
     - name: Upload logs

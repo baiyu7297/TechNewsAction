@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { normalizeMessagePayload } = require('./messageUtils');
 
 class DingTalkNotifier {
   constructor() {
@@ -11,10 +12,11 @@ class DingTalkNotifier {
     }
 
     try {
+      const payloadMessage = normalizeMessagePayload(message, 'AI 技术情报');
       const payload = {
         msgtype: 'text',
         text: {
-          content: message
+          content: payloadMessage.text
         }
       };
 

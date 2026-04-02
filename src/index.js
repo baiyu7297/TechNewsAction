@@ -1,4 +1,5 @@
 const TechNewsFetcher = require('./newsFetcher');
+const NewsTranslator = require('./newsTranslator');
 const WeChatNotifier = require('./weChatNotifier');
 const ServerChanNotifier = require('./serverChanNotifier');
 const SimpleEmailNotifier = require('./simpleEmailNotifier');
@@ -31,10 +32,12 @@ async function main() {
     const newsFetcher = new TechNewsFetcher();
     
     // 获取最新的 AI 技术资讯
-    const news = await newsFetcher.fetchAllNews();
+    const rawNews = await newsFetcher.fetchAllNews();
+    const translator = new NewsTranslator();
+    const news = await translator.translateNews(rawNews);
     
-    // 格式化消息（即使没有新闻也会生成消息）
-    const message = newsFetcher.formatNewsMessage(news);
+    // 生成多通道摘要（即使没有新闻也会生成消息）
+    const digest = newsFetcher.formatNewsDigest(news);
     log(`📝 已格式化消息，包含 ${news.length} 条 AI 资讯`);
     
     if (news.length === 0) {
@@ -49,25 +52,25 @@ async function main() {
     if (process.env.SERVER_CHAN_KEY) {
       const notifier = new ServerChanNotifier();
       log('📤 使用 Server酱 推送消息...');
-      success = await notifier.send(message);
+      success = await notifier.send(digest);
       pushMethod = 'Server酱';
     } else if (process.env.WECHAT_WEBHOOK || process.env.WECHAT_APP_ID) {
       const notifier = new WeChatNotifier();
       log('📤 使用企业微信推送消息...');
-      success = await notifier.send(message, {
-        useMarkdown: false,
+      success = await notifier.send(digest, {
+        useMarkdown: true,
         fallbackToApp: true
       });
       pushMethod = '企业微信';
     } else if (process.env.DINGTALK_WEBHOOK) {
       const notifier = new DingTalkNotifier();
       log('📤 使用钉钉推送消息...');
-      success = await notifier.send(message);
+      success = await notifier.send(digest);
       pushMethod = '钉钉';
     } else if (process.env.SMTP_USER && process.env.TO_EMAIL) {
       const notifier = new SimpleEmailNotifier();
       log('📤 使用邮件推送消息...');
-      success = await notifier.send(message);
+      success = await notifier.send(digest);
       pushMethod = '邮件';
     } else {
       log('❌ 未配置任何推送方式');

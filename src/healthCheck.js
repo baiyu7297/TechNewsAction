@@ -57,7 +57,7 @@ async function healthCheck() {
   
   // 检查环境变量
   console.log('\n📋 环境变量检查:');
-  const envVars = [
+  const pushEnvVars = [
     'WECHAT_WEBHOOK',
     'SERVER_CHAN_KEY',
     'DINGTALK_WEBHOOK',
@@ -65,9 +65,13 @@ async function healthCheck() {
     'TO_EMAIL',
     'SENDGRID_API_KEY'
   ];
+  const translationEnvVars = [
+    'OPENAI_API_KEY',
+    'OPENAI_MODEL'
+  ];
   
   let hasAnyConfig = false;
-  envVars.forEach(varName => {
+  pushEnvVars.forEach(varName => {
     if (process.env[varName]) {
       console.log(`✓ ${varName} 已配置`);
       hasAnyConfig = true;
@@ -79,6 +83,15 @@ async function healthCheck() {
   if (!hasAnyConfig) {
     console.warn('\n⚠️  警告: 未配置任何推送方式');
   }
+
+  console.log('\n🌏 翻译配置检查:');
+  translationEnvVars.forEach(varName => {
+    if (process.env[varName]) {
+      console.log(`✓ ${varName} 已配置`);
+    } else {
+      console.log(`- ${varName} 未配置`);
+    }
+  });
   
   console.log('\n' + (allPassed ? '✅ 健康检查通过' : '❌ 健康检查失败'));
   process.exit(allPassed ? 0 : 1);

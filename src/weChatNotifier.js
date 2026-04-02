@@ -1,5 +1,6 @@
 const axios = require('axios');
 const moment = require('moment');
+const { normalizeMessagePayload } = require('./messageUtils');
 
 class WeChatNotifier {
   constructor() {
@@ -147,18 +148,19 @@ class WeChatNotifier {
   // 智能推送：优先使用Webhook，失败时尝试应用推送
   async send(message, options = {}) {
     const { useMarkdown = false, fallbackToApp = true } = options;
+    const payloadMessage = normalizeMessagePayload(message, 'AI 技术情报');
 
     try {
       // 优先使用企业微信机器人
       if (this.webhookUrl) {
         if (useMarkdown) {
-          return await this.sendMarkdown(message);
+          return await this.sendMarkdown(payloadMessage.markdown);
         } else {
-          return await this.sendByWebhook(message);
+          return await this.sendByWebhook(payloadMessage.text);
         }
       } else if (fallbackToApp && this.appId && this.appSecret) {
         // 回退到企业微信应用
-        return await this.sendByApp(message, options.touser);
+        return await this.sendByApp(payloadMessage.text, options.touser);
       } else {
         throw new Error('未配置任何微信推送方式');
       }
@@ -168,7 +170,7 @@ class WeChatNotifier {
       // 如果启用了回退机制且当前使用的是Webhook，尝试应用推送
       if (fallbackToApp && this.webhookUrl && this.appId && this.appSecret) {
         console.log('尝试使用企业微信应用回退推送...');
-        return await this.sendByApp(message, options.touser);
+        return await this.sendByApp(payloadMessage.text, options.touser);
       }
       
       throw error;

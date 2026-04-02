@@ -1,5 +1,6 @@
 // 简化版邮件通知器 - 支持 QQ/163/Gmail 等多种邮箱
 const https = require('https');
+const { normalizeMessagePayload } = require('./messageUtils');
 
 class SimpleEmailNotifier {
   constructor() {
@@ -63,6 +64,8 @@ class SimpleEmailNotifier {
       throw new Error('未配置邮件推送参数: SMTP_USER, SMTP_PASS, TO_EMAIL');
     }
 
+    const payloadMessage = normalizeMessagePayload(message, `AI 技术情报 - ${new Date().toLocaleDateString('zh-CN')}`);
+
     console.log('📧 准备发送邮件...');
     console.log(`   发件人: ${this.smtpUser}`);
     console.log(`   收件人: ${this.toEmail}`);
@@ -76,7 +79,7 @@ class SimpleEmailNotifier {
       const nodemailer = require('nodemailer');
       if (nodemailer && typeof nodemailer.createTransport === 'function') {
         console.log('   使用 nodemailer 发送');
-        return await this.sendWithNodemailer(message, nodemailer, smtpConfig);
+        return await this.sendWithNodemailer(payloadMessage, nodemailer, smtpConfig);
       }
     } catch (e) {
       console.log('   nodemailer 不可用');
@@ -86,7 +89,7 @@ class SimpleEmailNotifier {
     const sendgridKey = process.env.SENDGRID_API_KEY;
     if (sendgridKey) {
       console.log('   使用 SendGrid API 备用方案');
-      return await this.sendWithSendGrid(message);
+      return await this.sendWithSendGrid(payloadMessage);
     }
 
     console.error('❌ 无可用的邮件发送方式');
@@ -120,9 +123,9 @@ class SimpleEmailNotifier {
       const result = await transporter.sendMail({
         from: `"AI技术资讯推送" <${this.smtpUser}>`,
         to: this.toEmail,
-        subject: `🤖 AI技术资讯 - ${new Date().toLocaleDateString('zh-CN')}`,
-        html: message,
-        text: message.replace(/<[^>]*>/g, '')
+        subject: message.subject,
+        html: message.html,
+        text: message.text
       });
 
       console.log('✅ 邮件发送成功!');
@@ -163,7 +166,7 @@ class SimpleEmailNotifier {
     const emailData = {
       personalizations: [{
         to: [{ email: this.toEmail }],
-        subject: `📰 科技资讯 - ${new Date().toLocaleDateString('zh-CN')}`
+        subject: message.subject
       }],
       from: { 
         email: this.smtpUser,
@@ -171,7 +174,7 @@ class SimpleEmailNotifier {
       },
       content: [{
         type: 'text/html',
-        value: message
+        value: message.html
       }]
     };
 
